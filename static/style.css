@@ -1,0 +1,205 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+}
+
+h1 {
+    text-align: center;
+    color: #4a5568;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+h2 {
+    color: #4a5568;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 5px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+select:focus, textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    width: 100%;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.status-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f7fafc;
+    border-radius: 5px;
+    border-left: 4px solid #667eea;
+}
+
+#currentConfig p {
+    margin-bottom: 10px;
+}
+
+#currentConfig strong {
+    color: #4a5568;
+}
+
+.instructions {
+    margin-top: 30px;
+    padding: 20px;
+    background: #edf2f7;
+    border-radius: 5px;
+}
+
+.instructions ol {
+    padding-left: 20px;
+}
+
+.instructions li {
+    margin-bottom: 8px;
+}
+
+#status {
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.status-ready {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.status-saving {
+    background: #fefcbf;
+    color: #744210;
+}
+
+.status-saved {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.status-error {
+    background: #fed7d7;
+    color: #742a2a;
+}
+
+.call-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f0f8ff;
+    border-radius: 5px;
+    border-left: 4px solid #4299e1;
+}
+
+input[type="text"], input[type="tel"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus, input[type="tel"]:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+small {
+    color: #718096;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+}
+
+.call-status {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    display: none;
+}
+
+.call-status.calling {
+    background: #fefcbf;
+    color: #744210;
+    display: block;
+}
+
+.call-status.success {
+    background: #c6f6d5;
+    color: #22543d;
+    display: block;
+}
+
+.call-status.error {
+    background: #fed7d7;
+    color: #742a2a;
+    display: block;
+}
+
+#callButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}

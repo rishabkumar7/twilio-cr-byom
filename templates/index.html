@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Assistant Configuration</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Voice Assistant Configuration</h1>
+        
+        <form id="configForm">
+            <div class="form-group">
+                <label for="aiModel">Select AI Model:</label>
+                <select id="aiModel" name="aiModel" required>
+                    <option value="openai-gpt4o-mini">OpenAI GPT-4o Mini</option>
+                    <option value="openai-gpt4o">OpenAI GPT-4o</option>
+                    <option value="openai-gpt4">OpenAI GPT-4</option>
+                    <option value="gemini-pro">Google Gemini Pro</option>
+                    <option value="gemini-flash">Google Gemini Flash</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="personality">Select Personality Type:</label>
+                <select id="personality" name="personality" required>
+                    <option value="helpful">Helpful Assistant</option>
+                    <option value="friendly">Friendly Companion</option>
+                    <option value="professional">Professional Advisor</option>
+                    <option value="creative">Creative Thinker</option>
+                    <option value="witty">Witty Conversationalist</option>
+                    <option value="empathetic">Empathetic Listener</option>
+                    <option value="technical">Technical Expert</option>
+                    <option value="casual">Casual Friend</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="customPrompt">Custom System Prompt (Optional):</label>
+                <textarea id="customPrompt" name="customPrompt" rows="4" placeholder="Enter a custom system prompt to override the personality..."></textarea>
+            </div>
+
+            <button type="submit">Save Configuration</button>
+        </form>
+
+        <div class="status-section">
+            <h2>Current Configuration</h2>
+            <div id="currentConfig">
+                <p><strong>Model:</strong> <span id="currentModel">Not set</span></p>
+                <p><strong>Personality:</strong> <span id="currentPersonality">Not set</span></p>
+                <p><strong>Status:</strong> <span id="status">Ready to configure</span></p>
+            </div>
+        </div>
+
+        <div class="call-section">
+            <h2>Make a Call</h2>
+            <form id="callForm">
+                <div class="form-group">
+                    <label for="userName">Your Name:</label>
+                    <input type="text" id="userName" name="userName" required placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number:</label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="+1234567890">
+                    <small>Include country code (e.g., +1 for US)</small>
+                </div>
+                
+                <button type="submit" id="callButton">Call Me Now</button>
+            </form>
+            
+            <div id="callStatus" class="call-status"></div>
+        </div>
+
+        <div class="instructions">
+            <h2>Instructions</h2>
+            <ol>
+                <li>Configure your AI assistant using the settings above</li>
+                <li>Enter your name and phone number in the call section</li>
+                <li>Click "Call Me Now" to receive a call from the AI assistant</li>
+                <li>Alternatively, call your Twilio number directly to interact with the assistant</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

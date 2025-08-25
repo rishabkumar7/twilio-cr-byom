@@ -1,0 +1,9 @@
+uvicorn
+fastapi
+python-dotenv
+websockets
+openai
+google-generativeai
+jinja2
+python-multipart
+twilio
