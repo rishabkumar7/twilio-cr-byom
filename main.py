@@ -23,8 +23,8 @@ WELCOME_GREETING = "Hi! I am a voice assistant powered by Twilio and AI. Ask me 
 
 def get_personalized_greeting(call_sid):
     """Get personalized greeting if user data is available"""
-    if call_sid in sessions and "name" in sessions[call_sid]:
-        name = sessions[call_sid]["name"]
+    if call_sid in user_info and "name" in user_info[call_sid]:
+        name = user_info[call_sid]["name"]
         return f"Hi {name}! I am a voice assistant powered by Twilio and AI. Ask me anything!"
     return WELCOME_GREETING
 
@@ -57,6 +57,7 @@ twilio_client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_T
 
 # Store active sessions and current configuration
 sessions = {}
+user_info = {}  # Store user information for outbound calls
 current_config = DEFAULT_CONFIG.copy()
 
 # Pydantic models
@@ -163,8 +164,8 @@ async def make_call(call_request: CallRequest):
             method="GET"
         )
         
-        # Store the name for personalized greeting
-        sessions[call.sid] = {
+        # Store user info for personalized greeting
+        user_info[call.sid] = {
             "name": call_request.name,
             "phone": call_request.phoneNumber
         }
@@ -210,15 +211,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 websocket.call_sid = call_sid
                 system_prompt = get_system_prompt()
                 
-                # Check if this is an outbound call with stored user info
-                if call_sid in sessions and isinstance(sessions[call_sid], dict) and "name" in sessions[call_sid]:
-                    # Preserve user info and add conversation history
-                    user_info = sessions[call_sid]
-                    sessions[call_sid] = [{"role": "system", "content": system_prompt}]
-                    sessions[call_sid].user_info = user_info
-                else:
-                    # New inbound call
-                    sessions[call_sid] = [{"role": "system", "content": system_prompt}]
+                # Initialize conversation history
+                sessions[call_sid] = [{"role": "system", "content": system_prompt}]
                 
                 print(f"Using AI model: {current_config['aiModel']}, Personality: {current_config['personality']}")
                 
@@ -249,6 +243,7 @@ async def websocket_endpoint(websocket: WebSocket):
         print("WebSocket connection closed")
         if call_sid:
             sessions.pop(call_sid, None)
+            user_info.pop(call_sid, None)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=PORT)
