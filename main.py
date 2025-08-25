@@ -181,9 +181,13 @@ async def make_call(call_request: CallRequest):
         raise HTTPException(status_code=500, detail=f"Failed to initiate call: {str(e)}")
 
 @app.get("/twiml")
-async def twiml_endpoint(CallSid: str = None):
+async def twiml_endpoint(request: Request):
     """Endpoint that returns TwiML for Twilio to connect to the WebSocket"""
-    greeting = get_personalized_greeting(CallSid) if CallSid else WELCOME_GREETING
+    # Get CallSid from query parameters
+    call_sid = request.query_params.get("CallSid")
+    greeting = get_personalized_greeting(call_sid) if call_sid else WELCOME_GREETING
+    
+    print(f"TwiML request for CallSid: {call_sid}")
     
     xml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
     <Response>
@@ -193,6 +197,11 @@ async def twiml_endpoint(CallSid: str = None):
     </Response>"""
     
     return Response(content=xml_response, media_type="text/xml")
+
+@app.post("/twiml")
+async def twiml_endpoint_post(request: Request):
+    """Handle POST requests to /twiml endpoint"""
+    return await twiml_endpoint(request)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
