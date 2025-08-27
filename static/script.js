@@ -6,9 +6,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentPersonalityElement = document.getElementById('currentPersonality');
     const callStatusElement = document.getElementById('callStatus');
     const callButton = document.getElementById('callButton');
+    const phoneInput = document.getElementById('phoneNumber');
 
     // Load current configuration on page load
     loadCurrentConfig();
+
+    // Add phone number masking on input
+    let originalPhoneNumber = '';
+    phoneInput.addEventListener('input', function(e) {
+        const cursorPosition = e.target.selectionStart;
+        const inputValue = e.target.value;
+        
+        // If user is deleting or the input is shorter, update original
+        if (inputValue.length <= originalPhoneNumber.length) {
+            originalPhoneNumber = inputValue;
+        } else {
+            // User is adding characters, add to original
+            const newChars = inputValue.slice(originalPhoneNumber.length);
+            originalPhoneNumber += newChars.replace(/\*/g, ''); // Remove any asterisks
+        }
+        
+        // Show masked version if more than 6 characters
+        if (originalPhoneNumber.length > 6) {
+            const masked = maskPhoneNumber(originalPhoneNumber);
+            if (e.target.value !== masked) {
+                e.target.value = masked;
+                // Try to maintain cursor position
+                e.target.setSelectionRange(cursorPosition, cursorPosition);
+            }
+        }
+    });
+
+    // Store original number for form submission
+    phoneInput.addEventListener('focus', function() {
+        if (originalPhoneNumber && originalPhoneNumber.length > 6) {
+            this.value = originalPhoneNumber;
+        }
+    });
+
+    phoneInput.addEventListener('blur', function() {
+        if (originalPhoneNumber && originalPhoneNumber.length > 6) {
+            this.value = maskPhoneNumber(originalPhoneNumber);
+        }
+    });
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -87,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(callForm);
         const callData = {
             name: formData.get('userName'),
-            phoneNumber: formData.get('phoneNumber')
+            phoneNumber: originalPhoneNumber || formData.get('phoneNumber') // Use original unmasked number
         };
 
         // Validate phone number format
@@ -112,7 +152,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (response.ok) {
-                updateCallStatus(`Call initiated! You should receive a call shortly at ${callData.phoneNumber}`, 'success');
+                const maskedNumber = maskPhoneNumber(callData.phoneNumber);
+                updateCallStatus(`Call initiated! You should receive a call shortly at ${maskedNumber}`, 'success');
             } else {
                 throw new Error(result.detail || 'Failed to initiate call');
             }
@@ -127,5 +168,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateCallStatus(message, className) {
         callStatusElement.textContent = message;
         callStatusElement.className = `call-status ${className}`;
+    }
+
+    function maskPhoneNumber(phoneNumber) {
+        if (!phoneNumber || phoneNumber.length < 6) return phoneNumber;
+        
+        // Show first 3 characters and last 3 characters
+        const start = phoneNumber.substring(0, 3);
+        const end = phoneNumber.substring(phoneNumber.length - 3);
+        const middle = '*'.repeat(Math.max(0, phoneNumber.length - 6));
+        
+        return start + middle + end;
     }
 });
