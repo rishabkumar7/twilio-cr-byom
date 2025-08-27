@@ -203,3 +203,46 @@ small {
     cursor: not-allowed;
     transform: none;
 }
+
+.elevenlabs-options {
+    background: #f8f9ff;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.elevenlabs-options h4 {
+    color: #4a5568;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #cbd5e0;
+    padding-bottom: 5px;
+}
+
+.voice-setting {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.voice-setting label {
+    min-width: 120px;
+    margin-bottom: 0;
+}
+
+.voice-setting input[type="range"] {
+    flex: 1;
+    max-width: 200px;
+}
+
+.voice-setting span {
+    min-width: 30px;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.voice-setting select {
+    flex: 1;
+    max-width: 200px;
+}

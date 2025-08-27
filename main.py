@@ -32,7 +32,13 @@ def get_personalized_greeting(call_sid):
 DEFAULT_CONFIG = {
     "aiModel": "openai-gpt4o-mini",
     "personality": "helpful",
-    "customPrompt": ""
+    "customPrompt": "",
+    "ttsProvider": "default",
+    "voiceId": "",
+    "elevenLabsModel": "flash_v2_5",
+    "speed": "1.0",
+    "stability": "0.5",
+    "similarity": "0.5"
 }
 
 # Personality prompts
@@ -65,6 +71,12 @@ class ConfigModel(BaseModel):
     aiModel: str
     personality: str
     customPrompt: str = ""
+    ttsProvider: str = "default"
+    voiceId: str = ""
+    elevenLabsModel: str = "flash_v2_5"
+    speed: str = "1.0"
+    stability: str = "0.5"
+    similarity: str = "0.5"
 
 class CallRequest(BaseModel):
     name: str
@@ -180,6 +192,30 @@ async def make_call(call_request: CallRequest):
         print(f"Error making call: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to initiate call: {str(e)}")
 
+def build_voice_attribute():
+    """Build the voice attribute string for TwiML based on current configuration"""
+    if current_config["ttsProvider"] == "default" or not current_config["voiceId"]:
+        return ""
+    
+    voice_id = current_config["voiceId"]
+    
+    # For ElevenLabs, build the complex voice attribute
+    if current_config["ttsProvider"] == "ElevenLabs":
+        # Add model if not default
+        if current_config["elevenLabsModel"] != "flash_v2_5":
+            voice_id += f"-{current_config['elevenLabsModel']}"
+        
+        # Add voice settings (speed_stability_similarity)
+        speed = current_config["speed"]
+        stability = current_config["stability"] 
+        similarity = current_config["similarity"]
+        
+        # Only add settings if they're not default values
+        if speed != "1.0" or stability != "0.5" or similarity != "0.5":
+            voice_id += f"-{speed}_{stability}_{similarity}"
+    
+    return voice_id
+
 @app.get("/twiml")
 async def twiml_endpoint(request: Request):
     """Endpoint that returns TwiML for Twilio to connect to the WebSocket"""
@@ -189,12 +225,27 @@ async def twiml_endpoint(request: Request):
     
     print(f"TwiML request for CallSid: {call_sid}")
     
+    # Build TTS attributes
+    tts_provider = current_config["ttsProvider"]
+    voice_attr = build_voice_attribute()
+    
+    # Build ConversationRelay attributes
+    relay_attrs = f'url="{WS_URL}" welcomeGreeting="{greeting}"'
+    
+    if tts_provider != "default":
+        relay_attrs += f' ttsProvider="{tts_provider}"'
+        
+    if voice_attr:
+        relay_attrs += f' voice="{voice_attr}"'
+    
     xml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
     <Response>
       <Connect>
-        <ConversationRelay url="{WS_URL}" welcomeGreeting="{greeting}" />
+        <ConversationRelay {relay_attrs} />
       </Connect>
     </Response>"""
+    
+    print(f"Generated TwiML with TTS provider: {tts_provider}, Voice: {voice_attr}")
     
     return Response(content=xml_response, media_type="text/xml")
 
