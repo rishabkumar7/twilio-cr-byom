@@ -36,7 +36,7 @@ DEFAULT_CONFIG = {
     "ttsProvider": "default",
     "voiceId": "",
     "elevenLabsModel": "flash_v2_5",
-    "speed": "1.0",
+    "speed": "1.1",
     "stability": "0.5",
     "similarity": "0.5"
 }
@@ -211,7 +211,7 @@ def build_voice_attribute():
         similarity = current_config["similarity"]
         
         # Only add settings if they're not default values
-        if speed != "1.0" or stability != "0.5" or similarity != "0.5":
+        if speed != "1.1" or stability != "0.5" or similarity != "0.5":
             voice_id += f"-{speed}_{stability}_{similarity}"
     
     return voice_id
