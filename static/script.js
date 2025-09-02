@@ -21,23 +21,21 @@ document.addEventListener('DOMContentLoaded', function() {
             { id: 'en-GB-Wavenet-A', name: 'English (UK) - Female (Wavenet-A)' },
             { id: 'en-GB-Wavenet-B', name: 'English (UK) - Male (Wavenet-B)' }
         ],
-        'Amazon': [
-            { id: 'Joanna', name: 'Joanna - Female (US)' },
+        'amazon': [
+            { id: 'Ruth-Generative', name: 'Ruth - Female (US)' },
             { id: 'Matthew', name: 'Matthew - Male (US)' },
+            { id: 'Kimberly', name: 'Kimberly - Female (US)' },
+            { id: 'Justin', name: 'Justin - Male (US)' },
             { id: 'Amy', name: 'Amy - Female (UK)' },
-            { id: 'Brian', name: 'Brian - Male (UK)' },
-            { id: 'Emma', name: 'Emma - Female (UK)' },
-            { id: 'Joey', name: 'Joey - Male (US)' }
+            { id: 'Brian', name: 'Brian - Male (UK)' }
         ],
         'ElevenLabs': [
-            { id: 'NYC9WEgkq1u4jiqBseQ9', name: 'Rachel - Female (US)' },
-            { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Sarah - Female (US)' },
-            { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam - Male (US)' },
-            { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella - Female (US)' },
-            { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold - Male (US)' },
-            { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli - Female (UK)' },
-            { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh - Male (US)' },
-            { id: 'rrnE6lqcAXUsjyKgJHl4', name: 'Antoni - Male (US)' }
+            { id: 'SaqYcK3ZpDKBAImA8AdW', name: 'Jane Doe - Female (US)' },
+            { id: 'UgBBYS2sOqTuMpoF3BR0', name: 'Mark - Male (US)' },
+            { id: 'OYTbf65OHHFELVut7v2H', name: 'Hope - Female (US)' },
+            { id: 'EkK5I93UQWFDigLMpZcX', name: 'James - Male (US)' },
+            { id: 'ZF6FPAbjXT4488VcRRnw', name: 'Amelia - Female (UK)' },
+            { id: 'G17SuINrv2H9FC6nvetn', name: 'Christopher - Male (UK)' }
         ]
     };
 
