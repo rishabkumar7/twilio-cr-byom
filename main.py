@@ -228,7 +228,7 @@ def build_voice_attribute():
             similarity_formatted = similarity
         
         # Only add settings if they're not default values
-        if speed != "1.1" or stability != "0.5" or similarity != "0.5":
+        if speed_formatted != "1.1" or stability_formatted != "0.5" or similarity_formatted != "0.5":
             voice_id += f"-{speed_formatted}_{stability_formatted}_{similarity_formatted}"
     print(f"Using voice attribute: {voice_id}")
     return voice_id
