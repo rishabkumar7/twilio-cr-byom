@@ -210,10 +210,27 @@ def build_voice_attribute():
         stability = current_config["stability"] 
         similarity = current_config["similarity"]
         
+        # Ensure decimal format is preserved by converting to float and back to string
+        # This ensures "1.0" stays as "1.0" and doesn't become "1"
+        try:
+            speed_float = float(speed)
+            stability_float = float(stability)
+            similarity_float = float(similarity)
+            
+            # Format with one decimal place to ensure consistency
+            speed_formatted = f"{speed_float:.1f}"
+            stability_formatted = f"{stability_float:.1f}"
+            similarity_formatted = f"{similarity_float:.1f}"
+        except (ValueError, TypeError):
+            # Fallback to original string values if conversion fails
+            speed_formatted = speed
+            stability_formatted = stability
+            similarity_formatted = similarity
+        
         # Only add settings if they're not default values
-        if speed != "1.1" or stability != "0.5" or similarity != "0.5":
-            voice_id += f"-{speed}_{stability}_{similarity}"
-    
+        if speed_formatted != "1.1" or stability_formatted != "0.5" or similarity_formatted != "0.5":
+            voice_id += f"-{speed_formatted}_{stability_formatted}_{similarity_formatted}"
+    print(f"Using voice attribute: {voice_id}")
     return voice_id
 
 @app.get("/twiml")
