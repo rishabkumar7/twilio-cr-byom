@@ -160,6 +160,11 @@ async def update_config(config: ConfigModel):
     current_config = config.dict()
     return {"status": "success", "config": current_config}
 
+@app.get("/api/phone-number")
+async def get_phone_number():
+    """Expose the configured Twilio phone number for QR usage."""
+    return {"phoneNumber": os.getenv("TWILIO_PHONE_NUMBER", "")}
+
 @app.post("/api/call")
 async def make_call(call_request: CallRequest):
     """Initiate an outbound call"""
