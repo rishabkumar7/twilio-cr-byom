@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000D25">
     <title>AI Voice Assistant powered by Twilio</title>
     <link rel="stylesheet" href="/static/style.css">
     <link id ="favicon" rel="icon" href="{{ url_for('static', path='favicon.png') }}">
@@ -106,22 +107,36 @@
 
         <div class="call-section">
             <h2>Make a Call</h2>
-            <form id="callForm">
-                <div class="form-group">
-                    <label for="userName">Your Name:</label>
-                    <input type="text" id="userName" name="userName" required placeholder="Enter your name">
+            <div class="call-grid">
+                <div class="call-form-col">
+                    <form id="callForm">
+                        <div class="form-group">
+                            <label for="userName">Your Name:</label>
+                            <input type="text" id="userName" name="userName" required placeholder="Enter your name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phoneNumber">Phone Number:</label>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="+1234567890">
+                            <small>Include country code (e.g., +1 for US)</small>
+                        </div>
+
+                        <button type="submit" id="callButton">Call Me Now</button>
+                    </form>
+                    <div id="callStatus" class="call-status"></div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="phoneNumber">Phone Number:</label>
-                    <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="+1234567890">
-                    <small>Include country code (e.g., +1 for US)</small>
+
+                <div class="qr-card" id="qrCard" aria-live="polite">
+                    <div class="qr-inner">
+                        <img id="qrImage" alt="Scan to call the AI assistant" width="240" height="240" style="display:none"/>
+                        <div id="qrFallback" class="qr-fallback">QR code will appear here once your Twilio number is configured.</div>
+                        <div class="qr-caption">
+                            <span>Or scan to call</span>
+                            <a id="telLink" class="tel-link" href="#" rel="nofollow noopener" aria-label="Call the AI assistant"></a>
+                        </div>
+                    </div>
                 </div>
-                
-                <button type="submit" id="callButton">Call Me Now</button>
-            </form>
-            
-            <div id="callStatus" class="call-status"></div>
+            </div>
         </div>
 
         <div class="instructions">

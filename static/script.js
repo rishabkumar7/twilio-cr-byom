@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load current configuration on page load
     loadCurrentConfig();
+    // Initialize QR section using server-provided Twilio number
+    initQrSection();
 
     // Add phone number masking on input
     let originalPhoneNumber = '';
@@ -284,5 +286,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const middle = '*'.repeat(Math.max(0, phoneNumber.length - 6));
         
         return start + middle + end;
+    }
+
+    async function initQrSection() {
+        try {
+            const res = await fetch('/api/phone-number');
+            if (!res.ok) return;
+            const data = await res.json();
+            const number = (data && data.phoneNumber) ? String(data.phoneNumber).trim() : '';
+
+            const qrImg = document.getElementById('qrImage');
+            const telLink = document.getElementById('telLink');
+            const fallback = document.getElementById('qrFallback');
+
+            if (number) {
+                const telUri = `tel:${number}`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(telUri)}`;
+                qrImg.src = qrUrl;
+                qrImg.style.display = 'inline-block';
+                fallback.style.display = 'none';
+                telLink.href = telUri;
+                telLink.textContent = number;
+            } else {
+                // Show fallback text if not configured
+                qrImg.style.display = 'none';
+                fallback.style.display = 'block';
+                telLink.removeAttribute('href');
+                telLink.textContent = '';
+            }
+        } catch (e) {
+            // Silent fail; fallback stays visible
+            console.error('Failed to init QR section', e);
+        }
     }
 });
