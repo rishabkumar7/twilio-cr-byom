@@ -99,6 +99,34 @@ This application provides:
     - Users can call your Twilio number directly
     - They'll interact with the AI using your current configuration settings
     
+### Count Calls to Your Twilio Number
+
+Use the helper script to count calls to/from your configured Twilio number in a time range.
+
+Requirements: `.env` must have `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER`.
+
+Examples:
+
+```bash
+# All calls (inbound + outbound) during January (UTC) — default
+python scripts/call_count.py --start 2025-01-01 --end 2025-01-31
+
+# Inbound only or outbound only
+python scripts/call_count.py --start 2025-01-01 --end 2025-01-31 --inbound
+python scripts/call_count.py --start 2025-01-01 --end 2025-01-31 --outbound
+
+# Specific window using ISO-8601 with Z/offset
+python scripts/call_count.py --start 2025-01-01T00:00 --end 2025-01-01T12:00Z
+
+# Include a per-status breakdown
+python scripts/call_count.py --start 2025-01-01 --end 2025-01-31 --status-breakdown
+```
+
+Notes:
+- Dates are interpreted as UTC unless you include a timezone offset or `Z`.
+- Default counts both inbound and outbound.
+- `--inbound` counts only calls where `to` equals your Twilio number.
+- `--outbound` counts only calls where `from` equals your Twilio number.
 
 ## How It Works
 
