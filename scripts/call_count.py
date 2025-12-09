@@ -74,7 +74,7 @@ def main() -> int:
         print("Error: Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER in .env")
         return 2
 
-    parser = argparse.ArgumentParser(description="Count calls to your Twilio number in a time range")
+    parser = argparse.ArgumentParser(description="Count calls to/from your Twilio number in a time range")
     parser.add_argument(
         "--start",
         required=True,
