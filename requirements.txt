@@ -3,7 +3,7 @@ fastapi
 python-dotenv
 websockets
 openai
-google-generativeai
+google-genai
 jinja2
 python-multipart
 twilio

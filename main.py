@@ -9,7 +9,8 @@ from fastapi import Request
 from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from twilio.rest import Client
 
 # Load environment variables from .env file
@@ -55,8 +56,8 @@ PERSONALITY_PROMPTS = {
 
 # Initialize AI clients
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-if os.getenv("GEMINI_API_KEY"):
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+gemini_api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+gemini_client = genai.Client(api_key=gemini_api_key) if gemini_api_key else None
 
 # Initialize Twilio client
 twilio_client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
@@ -113,29 +114,30 @@ async def ai_response(messages):
             return completion.choices[0].message.content
             
         elif current_config["aiModel"].startswith("gemini"):
-            if not os.getenv("GEMINI_API_KEY"):
+            if not gemini_client:
                 raise Exception("Gemini API key not configured")
                 
             model_map = {
-                "gemini-pro": "gemini-pro",
-                "gemini-flash": "gemini-1.5-flash"
+                "gemini-pro": "gemini-2.5-pro",
+                "gemini-flash": "gemini-2.5-flash"
             }
-            model_name = model_map.get(current_config["aiModel"], "gemini-pro")
-            
-            model = genai.GenerativeModel(model_name)
-            
-            # Convert messages to Gemini format
-            prompt = ""
+            model_name = model_map.get(current_config["aiModel"], "gemini-2.5-flash")
+
+            # Convert conversation history into a single text content payload.
+            conversation_text = ""
             for msg in messages[1:]:  # Skip system message for now
                 if msg["role"] == "user":
-                    prompt += f"User: {msg['content']}\n"
+                    conversation_text += f"User: {msg['content']}\n"
                 elif msg["role"] == "assistant":
-                    prompt += f"Assistant: {msg['content']}\n"
-            
-            # Add system prompt as context
-            full_prompt = f"System: {messages[0]['content']}\n\n{prompt}Assistant:"
-            
-            response = model.generate_content(full_prompt)
+                    conversation_text += f"Assistant: {msg['content']}\n"
+
+            response = gemini_client.models.generate_content(
+                model=model_name,
+                contents=conversation_text or "Hello",
+                config=types.GenerateContentConfig(
+                    system_instruction=messages[0]["content"]
+                )
+            )
             return response.text
             
     except Exception as e:
