@@ -58,6 +58,12 @@ This application provides:
 
 ## Usage
 
+## Deploy to Azure Container Apps
+
+For a complete Azure deployment guide (including WebSocket support and troubleshooting for the internal-domain 404 page), see:
+
+- [DEPLOY-Azure-ACA.md](DEPLOY-Azure-ACA.md)
+
 ### Setup and Start the Server
 
 1.  Start ngrok to expose your local server:
