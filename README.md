@@ -60,6 +60,16 @@ This application provides:
 
 ## Deploy to Azure Container Apps
 
+### One-command deploy
+
+Use the interactive deployment script from the repository root:
+
+```bash
+./deploy.sh
+```
+
+The script prompts for resource group, app name, and location, then creates the required Azure resources and configures the app.
+
 For a complete Azure deployment guide (including WebSocket support and troubleshooting for the internal-domain 404 page), see:
 
 - [DEPLOY-Azure-ACA.md](DEPLOY-Azure-ACA.md)

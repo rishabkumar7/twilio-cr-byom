@@ -16,6 +16,18 @@ This guide deploys this FastAPI app to Azure Container Apps with external HTTPS 
 - Twilio credentials and phone number.
 - OpenAI API key (required), Gemini API key (optional).
 
+## Quick path: use deploy.sh
+
+From the repository root, run:
+
+```bash
+./deploy.sh
+```
+
+The script prompts for resource group, app name, and location, then provisions Azure resources, builds the container image, configures secrets and env vars, and prints the public app URL.
+
+If you prefer a fully manual walkthrough, follow the steps below.
+
 ## 1) Sign in and set variables
 
 ```bash
