@@ -4,14 +4,14 @@
 
 ## Project Overview
 
-**Twilio ConversationRelay BYOM (Bring Your Own Model)** — A FastAPI-based AI voice assistant that uses [Twilio ConversationRelay](https://www.twilio.com/docs/voice/twiml/connect/conversationrelay) to bridge phone calls with multiple LLM backends (OpenAI GPT, Google Gemini). Users configure the assistant's AI model, personality, and TTS voice through a web UI, then interact via inbound or outbound phone calls.
+**Twilio ConversationRelay BYOM (Bring Your Own Model)** — A FastAPI-based AI voice assistant that uses [Twilio ConversationRelay](https://www.twilio.com/docs/voice/twiml/connect/conversationrelay) to bridge phone calls with multiple LLM backends (OpenAI GPT, Google Gemini, AWS Bedrock/Amazon Nova). Users configure the assistant's AI model, personality, and TTS voice through a web UI, then interact via inbound or outbound phone calls.
 
 ### Key Technologies
 
 - **Runtime**: Python 3.12
 - **Framework**: FastAPI + Uvicorn
 - **Templating**: Jinja2
-- **AI SDKs**: `openai`, `google-genai`
+- **AI SDKs**: `openai`, `google-genai`, `boto3` (AWS Bedrock)
 - **Telephony**: Twilio Voice SDK (`twilio`), ConversationRelay (WebSocket-based)
 - **TTS Providers**: Twilio (default), Google TTS, Amazon Polly, ElevenLabs
 - **Frontend**: Vanilla HTML/CSS/JS (no build step)
@@ -58,10 +58,11 @@ All server logic lives in `main.py`. There is no separate router, service, or mo
                 │              │  Messages: setup → prompt → text response
                 └──────────────┘
                        │
-            ┌──────────┴──────────┐
-            ▼                     ▼
-      OpenAI API            Google Gemini API
-   (gpt-4o-mini/4o/4)    (gemini-2.5-pro/flash)
+            ┌──────────┼──────────────────┐
+            ▼          ▼                  ▼
+      OpenAI API  Google Gemini API  AWS Bedrock
+   (gpt-4o-mini/  (gemini-2.5-pro/  (nova-micro/
+     4o/4)          flash)            lite/pro)
 ```
 
 ### WebSocket Protocol (ConversationRelay)
@@ -120,6 +121,7 @@ The runtime configuration (`current_config`) has these fields:
 | `TWILIO_AUTH_TOKEN`    | Yes      | Twilio Auth Token                          |
 | `TWILIO_PHONE_NUMBER`  | Yes     | Twilio phone number (E.164 format)         |
 | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | No | Google Gemini API key          |
+| `AWS_REGION`          | No       | AWS region for Bedrock (default: `us-east-1`). Uses standard AWS credential chain (env vars, CLI profile, or IAM role) |
 | `NGROK_URL`           | Yes      | Public hostname (without `https://`) for WebSocket URL |
 | `PORT`                | No       | Server port (default: `8080`)              |
 

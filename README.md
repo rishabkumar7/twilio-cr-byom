@@ -1,14 +1,14 @@
 # AI Voice Assistant with Web Configuration
 
-This project creates an intelligent voice assistant that uses [Twilio Voice](https://www.twilio.com/docs/voice) and [ConversationRelay](https://www.twilio.com/docs/voice/twiml/connect/conversationrelay) with multiple AI models including [OpenAI API](https://platform.openai.com/docs/api-reference/introduction) and [Google Gemini](https://ai.google.dev/). The assistant can engage in natural two-way conversations over phone calls with configurable personalities and AI models.
+This project creates an intelligent voice assistant that uses [Twilio Voice](https://www.twilio.com/docs/voice) and [ConversationRelay](https://www.twilio.com/docs/voice/twiml/connect/conversationrelay) with multiple AI models including [OpenAI API](https://platform.openai.com/docs/api-reference/introduction), [Google Gemini](https://ai.google.dev/), and [AWS Bedrock](https://docs.aws.amazon.com/bedrock/) (Amazon Nova). The assistant can engage in natural two-way conversations over phone calls with configurable personalities and AI models.
 
 ## Overview
 
 This application provides:
-- **Web Configuration Interface**: Select AI models (OpenAI GPT-4o, GPT-4, Gemini) and personality types
+- **Web Configuration Interface**: Select AI models (OpenAI GPT-4o, GPT-4, Gemini, AWS Nova) and personality types
 - **Inbound Calls**: Users can call your Twilio number to interact with the AI assistant
 - **Outbound Calls**: Initiate calls to users directly from the web interface
-- **Multiple AI Models**: Support for OpenAI GPT models and Google Gemini
+- **Multiple AI Models**: Support for OpenAI GPT models, Google Gemini, and AWS Bedrock (Amazon Nova)
 - **Personality Customization**: Choose from 8 different personality types or create custom prompts
 - **Real-time Configuration**: Changes apply immediately to new calls
 
@@ -19,6 +19,7 @@ This application provides:
 - A Twilio Number with Voice Capabilities: [Instructions to purchase a number](https://support.twilio.com/hc/en-us/articles/223180928-How-to-Buy-a-Twilio-Phone-Number)
 - **Required**: OpenAI Account and API Key: Visit [OpenAI's platform](https://platform.openai.com/api-keys)
 - **Optional**: Google AI Studio Account and API Key: Visit [Google AI Studio](https://aistudio.google.com/app/apikey) for Gemini models
+- **Optional**: AWS Account with Bedrock access: Visit [AWS Bedrock](https://aws.amazon.com/bedrock/) for Amazon Nova models
 - ngrok for local development: [Download ngrok](https://ngrok.com/)
 
 ## Installation
@@ -51,7 +52,10 @@ This application provides:
     
     # Optional - Google Gemini API Configuration
     GEMINI_API_KEY=your_gemini_api_key_here
-    
+
+    # Optional - AWS Bedrock Configuration (uses standard AWS credential chain)
+    AWS_REGION=us-east-1
+
     # Required - Ngrok Configuration (without https://)
     NGROK_URL=your-ngrok-url.ngrok.io
     ```
@@ -101,7 +105,7 @@ For a complete Azure deployment guide (including WebSocket support and troublesh
 1.  Open your browser and go to: `http://localhost:8080`
 
 2.  **Configure AI Settings:**
-    - Select your preferred AI model (OpenAI GPT-4o, GPT-4, or Gemini)
+    - Select your preferred AI model (OpenAI GPT-4o, GPT-4, Gemini, or AWS Nova)
     - Choose a personality type (Helpful, Friendly, Professional, Creative, etc.)
     - Optionally, add a custom system prompt
     - Click "Save Configuration"
@@ -151,7 +155,7 @@ Notes:
 2.  Twilio requests TwiML from `/twiml` endpoint
 3.  TwiML instructs Twilio to connect to WebSocket at `/ws`
 4.  Voice input is sent to the server via WebSocket
-5.  Server sends input to the configured AI model (OpenAI/Gemini)
+5.  Server sends input to the configured AI model (OpenAI/Gemini/Bedrock)
 6.  AI response is sent back to Twilio and converted to speech
 7.  Conversation continues until call ends
 
@@ -164,6 +168,7 @@ Notes:
 ### AI Model Selection
 - **OpenAI Models**: GPT-4o Mini (default), GPT-4o, GPT-4
 - **Google Gemini**: Gemini Pro, Gemini Flash
+- **AWS Bedrock (Amazon Nova)**: Nova Micro, Nova Lite, Nova Pro
 - Models are switched dynamically based on web configuration
 
 ## Project Structure
@@ -205,12 +210,17 @@ twilio-cr-ai/
    - Verify API keys are correctly set
    - For Gemini models, ensure `GEMINI_API_KEY` is configured
 
-3. **Calls not connecting**
+3. **AWS Bedrock model not working**
+   - Ensure AWS credentials are configured (via environment variables, AWS CLI profile, or IAM role)
+   - Verify you have enabled the Nova model(s) in the [AWS Bedrock console](https://console.aws.amazon.com/bedrock/)
+   - Check that your `AWS_REGION` is set to a region that supports Bedrock
+
+4. **Calls not connecting**
    - Confirm ngrok is running and URL is updated in `.env`
    - Check Twilio webhook configuration
    - Ensure phone numbers include country codes
 
-4. **Web interface not loading**
+5. **Web interface not loading**
    - Confirm server is running on port 8080
    - Check that `templates/` and `static/` directories exist
 
@@ -219,3 +229,4 @@ twilio-cr-ai/
 - Check [Twilio Documentation](https://www.twilio.com/docs) for Twilio-specific issues
 - Visit [OpenAI Documentation](https://platform.openai.com/docs) for API-related questions
 - Review [Gemini API Documentation](https://ai.google.dev/docs) for Gemini model issues
+- Consult [AWS Bedrock Documentation](https://docs.aws.amazon.com/bedrock/) for Bedrock/Nova model issues
