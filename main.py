@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from pydantic import BaseModel
+import boto3
 from openai import OpenAI
 from dotenv import load_dotenv
 from google import genai
@@ -58,6 +59,13 @@ PERSONALITY_PROMPTS = {
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 gemini_api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 gemini_client = genai.Client(api_key=gemini_api_key) if gemini_api_key else None
+
+# Initialize AWS Bedrock client
+aws_region = os.getenv("AWS_REGION", "us-east-1")
+try:
+    bedrock_client = boto3.client("bedrock-runtime", region_name=aws_region)
+except Exception:
+    bedrock_client = None
 
 # Initialize Twilio client
 twilio_client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
@@ -139,7 +147,34 @@ async def ai_response(messages):
                 )
             )
             return response.text
-            
+
+        elif current_config["aiModel"].startswith("bedrock"):
+            if not bedrock_client:
+                raise Exception("AWS Bedrock client not configured. Check your AWS credentials.")
+
+            model_map = {
+                "bedrock-nova-micro": "amazon.nova-micro-v1:0",
+                "bedrock-nova-lite": "amazon.nova-lite-v1:0",
+                "bedrock-nova-pro": "amazon.nova-pro-v1:0"
+            }
+            model_id = model_map.get(current_config["aiModel"], "amazon.nova-lite-v1:0")
+
+            # Build Bedrock converse API messages (separate system prompt)
+            system_prompt = [{"text": messages[0]["content"]}]
+            bedrock_messages = []
+            for msg in messages[1:]:
+                bedrock_messages.append({
+                    "role": msg["role"],
+                    "content": [{"text": msg["content"]}]
+                })
+
+            response = bedrock_client.converse(
+                modelId=model_id,
+                messages=bedrock_messages,
+                system=system_prompt
+            )
+            return response["output"]["message"]["content"][0]["text"]
+
     except Exception as e:
         print(f"Error with AI response: {e}")
         return "I'm sorry, I'm having trouble processing your request right now."
