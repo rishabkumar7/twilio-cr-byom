@@ -183,7 +183,7 @@ async def ai_response(messages):
 @app.get("/")
 async def web_interface(request: Request):
     """Serve the web configuration interface"""
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="index.html")
 
 @app.get("/api/config")
 async def get_config():
