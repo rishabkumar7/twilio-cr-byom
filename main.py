@@ -1,6 +1,8 @@
+import asyncio
 import os
 import json
 import uvicorn
+from urllib.parse import parse_qs
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
@@ -22,6 +24,7 @@ PORT = int(os.getenv("PORT", "8080"))
 DOMAIN = os.getenv("NGROK_URL")
 WS_URL = f"wss://{DOMAIN}/ws"
 WELCOME_GREETING = "Hi! I am a voice assistant powered by Twilio and AI. Ask me anything!"
+MAX_CALL_DURATION_SECONDS = 120
 
 def get_personalized_greeting(call_sid):
     """Get personalized greeting if user data is available"""
@@ -73,6 +76,7 @@ twilio_client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_T
 # Store active sessions and current configuration
 sessions = {}
 user_info = {}  # Store user information for outbound calls
+call_limit_tasks = {}  # Store per-call timers that enforce the maximum duration
 current_config = DEFAULT_CONFIG.copy()
 
 # Pydantic models
@@ -215,7 +219,8 @@ async def make_call(call_request: CallRequest):
             to=call_request.phoneNumber,
             from_=os.getenv("TWILIO_PHONE_NUMBER"),
             url=f"https://{DOMAIN}/twiml",
-            method="GET"
+            method="GET",
+            time_limit=MAX_CALL_DURATION_SECONDS
         )
         
         # Store user info for personalized greeting
@@ -275,11 +280,43 @@ def build_voice_attribute():
     print(f"Using voice attribute: {voice_id}")
     return voice_id
 
+async def end_call_after_limit(call_sid):
+    """End a call after the configured maximum duration."""
+    try:
+        await asyncio.sleep(MAX_CALL_DURATION_SECONDS)
+        print(f"Ending call {call_sid} after {MAX_CALL_DURATION_SECONDS} seconds")
+        await asyncio.to_thread(
+            twilio_client.calls(call_sid).update,
+            status="completed"
+        )
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
+        print(f"Error ending call {call_sid} after time limit: {e}")
+    finally:
+        if call_limit_tasks.get(call_sid) is asyncio.current_task():
+            call_limit_tasks.pop(call_sid, None)
+
+def schedule_call_limit(call_sid):
+    """Start a maximum-duration timer unless one already exists for this call."""
+    existing_task = call_limit_tasks.get(call_sid)
+    if existing_task and not existing_task.done():
+        return
+
+    call_limit_tasks[call_sid] = asyncio.create_task(end_call_after_limit(call_sid))
+
 @app.get("/twiml")
 async def twiml_endpoint(request: Request):
     """Endpoint that returns TwiML for Twilio to connect to the WebSocket"""
     # Get CallSid from query parameters
     call_sid = request.query_params.get("CallSid")
+    if not call_sid and request.method == "POST":
+        form_data = parse_qs((await request.body()).decode())
+        call_sid = form_data.get("CallSid", [None])[0]
+
+    if call_sid:
+        schedule_call_limit(call_sid)
+
     greeting = get_personalized_greeting(call_sid) if call_sid else WELCOME_GREETING
     
     print(f"TwiML request for CallSid: {call_sid}")
@@ -327,6 +364,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if message["type"] == "setup":
                 call_sid = message["callSid"]
                 print(f"Setup for call: {call_sid}")
+                schedule_call_limit(call_sid)
                 websocket.call_sid = call_sid
                 system_prompt = get_system_prompt()
                 
@@ -360,9 +398,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 
     except WebSocketDisconnect:
         print("WebSocket connection closed")
+    finally:
         if call_sid:
             sessions.pop(call_sid, None)
             user_info.pop(call_sid, None)
+            limit_task = call_limit_tasks.pop(call_sid, None)
+            if limit_task and not limit_task.done():
+                limit_task.cancel()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=PORT)
