@@ -58,6 +58,9 @@ This application provides:
 
     # Required - Ngrok Configuration (without https://)
     NGROK_URL=your-ngrok-url.ngrok.io
+
+    # Optional - Combined inbound/outbound calls allowed per remote number each UTC day
+    DAILY_CALL_LIMIT=5
     ```
 
 ## Usage
@@ -118,7 +121,11 @@ For a complete Azure deployment guide (including WebSocket support and troublesh
 4.  **Receive Inbound Calls:**
     - Users can call your Twilio number directly
     - They'll interact with the AI using your current configuration settings
-    
+
+### Daily Call Rate Limit
+
+Inbound and outbound calls are combined into one daily quota for each remote phone number. The default is five calls per UTC day. Set `DAILY_CALL_LIMIT=7` to allow seven instead. The application checks Twilio call history, so restarting the application does not reset the count.
+
 ### Count Calls to Your Twilio Number
 
 Use the helper script to count calls to/from your configured Twilio number in a time range.

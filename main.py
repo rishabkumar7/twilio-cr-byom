@@ -2,6 +2,7 @@ import asyncio
 import os
 import json
 import uvicorn
+from datetime import datetime, timezone
 from urllib.parse import parse_qs
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import Response
@@ -25,6 +26,7 @@ DOMAIN = os.getenv("NGROK_URL")
 WS_URL = f"wss://{DOMAIN}/ws"
 WELCOME_GREETING = "Hi! I am a voice assistant powered by Twilio and AI. Ask me anything!"
 MAX_CALL_DURATION_SECONDS = 120
+DAILY_CALL_LIMIT = int(os.getenv("DAILY_CALL_LIMIT", "5"))
 
 def get_personalized_greeting(call_sid):
     """Get personalized greeting if user data is available"""
@@ -77,6 +79,8 @@ twilio_client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_T
 sessions = {}
 user_info = {}  # Store user information for outbound calls
 call_limit_tasks = {}  # Store per-call timers that enforce the maximum duration
+daily_call_sids = {}  # Track calls locally in case Twilio's call list is briefly delayed
+daily_call_limit_lock = asyncio.Lock()
 current_config = DEFAULT_CONFIG.copy()
 
 # Pydantic models
@@ -206,6 +210,67 @@ async def get_phone_number():
     """Expose the configured Twilio phone number for QR usage."""
     return {"phoneNumber": os.getenv("TWILIO_PHONE_NUMBER", "")}
 
+def normalize_phone_number(phone_number):
+    """Normalize common phone number formatting to an E.164-style value."""
+    if not phone_number:
+        return ""
+
+    digits = "".join(character for character in phone_number if character.isdigit())
+    return f"+{digits}" if digits else ""
+
+def get_daily_call_sids(phone_number):
+    """Get today's inbound and outbound Twilio call SIDs for a remote number."""
+    twilio_number = normalize_phone_number(os.getenv("TWILIO_PHONE_NUMBER", ""))
+    day_start = datetime.now(timezone.utc).replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=None
+    )
+    time_filters = {"start_time_after": day_start}
+    call_sids = set()
+
+    for call in twilio_client.calls.stream(
+        from_=phone_number,
+        to=twilio_number,
+        limit=DAILY_CALL_LIMIT + 1,
+        **time_filters
+    ):
+        call_sids.add(call.sid)
+
+    for call in twilio_client.calls.stream(
+        from_=twilio_number,
+        to=phone_number,
+        limit=DAILY_CALL_LIMIT + 1,
+        **time_filters
+    ):
+        call_sids.add(call.sid)
+
+    return call_sids
+
+def get_daily_call_key(phone_number):
+    """Build a UTC-day key for local rate-limit tracking."""
+    return datetime.now(timezone.utc).date().isoformat(), phone_number
+
+def remove_expired_daily_call_keys(today):
+    """Discard local call tracking from previous UTC days."""
+    for key in list(daily_call_sids):
+        if key[0] != today:
+            daily_call_sids.pop(key, None)
+
+async def register_call_and_check_limit(phone_number, call_sid):
+    """Register an existing call and return whether it is within today's limit."""
+    phone_number = normalize_phone_number(phone_number)
+    async with daily_call_limit_lock:
+        twilio_call_sids = await asyncio.to_thread(get_daily_call_sids, phone_number)
+        key = get_daily_call_key(phone_number)
+        remove_expired_daily_call_keys(key[0])
+        local_call_sids = daily_call_sids.setdefault(key, set())
+        all_call_sids = twilio_call_sids | local_call_sids | {call_sid}
+        local_call_sids.add(call_sid)
+        return len(all_call_sids) <= DAILY_CALL_LIMIT
+
 @app.post("/api/call")
 async def make_call(call_request: CallRequest):
     """Initiate an outbound call"""
@@ -213,15 +278,33 @@ async def make_call(call_request: CallRequest):
         # Validate Twilio configuration
         if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN") or not os.getenv("TWILIO_PHONE_NUMBER"):
             raise HTTPException(status_code=500, detail="Twilio configuration incomplete. Please check your environment variables.")
-        
-        # Create the call
-        call = twilio_client.calls.create(
-            to=call_request.phoneNumber,
-            from_=os.getenv("TWILIO_PHONE_NUMBER"),
-            url=f"https://{DOMAIN}/twiml",
-            method="GET",
-            time_limit=MAX_CALL_DURATION_SECONDS
-        )
+
+        phone_number = normalize_phone_number(call_request.phoneNumber)
+        if not phone_number:
+            raise HTTPException(status_code=400, detail="A valid phone number is required.")
+
+        # Check and create under one lock so concurrent requests cannot bypass the limit.
+        async with daily_call_limit_lock:
+            twilio_call_sids = await asyncio.to_thread(get_daily_call_sids, phone_number)
+            key = get_daily_call_key(phone_number)
+            remove_expired_daily_call_keys(key[0])
+            local_call_sids = daily_call_sids.setdefault(key, set())
+
+            if len(twilio_call_sids | local_call_sids) >= DAILY_CALL_LIMIT:
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"Daily call limit of {DAILY_CALL_LIMIT} reached for this phone number."
+                )
+
+            call = await asyncio.to_thread(
+                twilio_client.calls.create,
+                to=phone_number,
+                from_=os.getenv("TWILIO_PHONE_NUMBER"),
+                url=f"https://{DOMAIN}/twiml",
+                method="GET",
+                time_limit=MAX_CALL_DURATION_SECONDS
+            )
+            local_call_sids.add(call.sid)
         
         # Store user info for personalized greeting
         user_info[call.sid] = {
@@ -235,6 +318,8 @@ async def make_call(call_request: CallRequest):
             "call_sid": call.sid
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error making call: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to initiate call: {str(e)}")
@@ -308,11 +393,40 @@ def schedule_call_limit(call_sid):
 @app.get("/twiml")
 async def twiml_endpoint(request: Request):
     """Endpoint that returns TwiML for Twilio to connect to the WebSocket"""
-    # Get CallSid from query parameters
-    call_sid = request.query_params.get("CallSid")
-    if not call_sid and request.method == "POST":
+    request_params = dict(request.query_params)
+    if request.method == "POST":
         form_data = parse_qs((await request.body()).decode())
-        call_sid = form_data.get("CallSid", [None])[0]
+        for key, values in form_data.items():
+            request_params.setdefault(key, values[0])
+
+    call_sid = request_params.get("CallSid")
+    direction = request_params.get("Direction", "")
+    from_number = normalize_phone_number(request_params.get("From"))
+    to_number = normalize_phone_number(request_params.get("To"))
+    twilio_number = normalize_phone_number(os.getenv("TWILIO_PHONE_NUMBER", ""))
+
+    if direction == "inbound" or to_number == twilio_number:
+        remote_number = from_number
+    else:
+        remote_number = to_number
+
+    if call_sid and remote_number:
+        try:
+            call_allowed = await register_call_and_check_limit(remote_number, call_sid)
+        except Exception as e:
+            print(f"Error checking daily call limit for {remote_number}: {e}")
+            return Response(
+                content='<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>',
+                media_type="text/xml"
+            )
+
+        if not call_allowed:
+            print(f"Daily call limit reached for {remote_number}")
+            end_call_xml = '<Reject reason="busy"/>' if direction == "inbound" else '<Hangup/>'
+            return Response(
+                content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{end_call_xml}</Response>',
+                media_type="text/xml"
+            )
 
     if call_sid:
         schedule_call_limit(call_sid)
