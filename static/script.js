@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('configForm');
     const callForm = document.getElementById('callForm');
     const statusElement = document.getElementById('status');
+    const statusPill = document.getElementById('statusPill');
     const currentModelElement = document.getElementById('currentModel');
     const currentPersonalityElement = document.getElementById('currentPersonality');
     const callStatusElement = document.getElementById('callStatus');
@@ -89,11 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateVoiceOptions(selectedProvider);
         
         // Show/hide ElevenLabs options
-        if (selectedProvider === 'ElevenLabs') {
-            elevenLabsOptions.style.display = 'block';
-        } else {
-            elevenLabsOptions.style.display = 'none';
-        }
+        elevenLabsOptions.hidden = selectedProvider !== 'ElevenLabs';
     });
 
     // Update voice selection based on TTS provider
@@ -191,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateVoiceOptions(config.ttsProvider);
                     
                     if (config.ttsProvider === 'ElevenLabs') {
-                        elevenLabsOptions.style.display = 'block';
+                        elevenLabsOptions.hidden = false;
                         if (config.elevenLabsModel) document.getElementById('elevenLabsModel').value = config.elevenLabsModel;
                         if (config.speed) {
                             document.getElementById('speed').value = config.speed;
@@ -224,7 +221,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateStatus(message, className) {
         statusElement.textContent = message;
-        statusElement.className = className;
+        // Map legacy class names onto the status pill container
+        const stateMap = {
+            'status-ready':  'is-ready',
+            'status-saving': 'is-saving',
+            'status-saved':  'is-saved',
+            'status-error':  'is-error'
+        };
+        const nextState = stateMap[className] || 'is-ready';
+        statusPill.className = 'status-pill ' + nextState;
     }
 
     // Handle call form submission
@@ -277,6 +282,16 @@ document.addEventListener('DOMContentLoaded', function() {
         callStatusElement.className = `call-status ${className}`;
     }
 
+    function formatPhoneDisplay(phoneNumber) {
+        // Light formatting for E.164 US numbers: +15551234567 -> +1 555 123 4567
+        if (!phoneNumber) return '';
+        const digits = phoneNumber.replace(/\D/g, '');
+        if (phoneNumber.startsWith('+1') && digits.length === 11) {
+            return `+1 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+        }
+        return phoneNumber;
+    }
+
     function maskPhoneNumber(phoneNumber) {
         if (!phoneNumber || phoneNumber.length < 6) return phoneNumber;
         
@@ -303,14 +318,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const telUri = `tel:${number}`;
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(telUri)}`;
                 qrImg.src = qrUrl;
-                qrImg.style.display = 'inline-block';
-                fallback.style.display = 'none';
+                qrImg.hidden = false;
+                fallback.hidden = true;
                 telLink.href = telUri;
-                telLink.textContent = number;
+                telLink.textContent = formatPhoneDisplay(number);
             } else {
                 // Show fallback text if not configured
-                qrImg.style.display = 'none';
-                fallback.style.display = 'block';
+                qrImg.hidden = true;
+                fallback.hidden = false;
                 telLink.removeAttribute('href');
                 telLink.textContent = '';
             }

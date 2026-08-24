@@ -3,154 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#000D25">
-    <title>AI Voice Assistant powered by Twilio</title>
+    <meta name="theme-color" content="#06091A">
+    <title>AI Voice Assistant — Twilio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
-    <link id ="favicon" rel="icon" href="{{ url_for('static', path='favicon.png') }}">
+    <link id="favicon" rel="icon" href="{{ url_for('static', path='favicon.png') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>AI Voice Assistant - by Twilio</h1>
-        
-        <form id="configForm">
-            <div class="form-group">
-                <label for="aiModel">Select AI Model:</label>
-                <select id="aiModel" name="aiModel" required>
-                    <option value="openai-gpt4o-mini">OpenAI GPT-4o Mini</option>
-                    <option value="openai-gpt4o">OpenAI GPT-4o</option>
-                    <option value="openai-gpt4">OpenAI GPT-4</option>
-                    <option value="gemini-pro">Google Gemini Pro</option>
-                    <option value="gemini-flash">Google Gemini Flash</option>
-                    <option value="bedrock-nova-micro">AWS Nova Micro</option>
-                    <option value="bedrock-nova-lite">AWS Nova Lite</option>
-                    <option value="bedrock-nova-pro">AWS Nova Pro</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="personality">Select Personality Type:</label>
-                <select id="personality" name="personality" required>
-                    <option value="helpful">Helpful Assistant</option>
-                    <option value="friendly">Friendly Companion</option>
-                    <option value="professional">Professional Advisor</option>
-                    <option value="creative">Creative Thinker</option>
-                    <option value="witty">Witty Conversationalist</option>
-                    <option value="empathetic">Empathetic Listener</option>
-                    <option value="technical">Technical Expert</option>
-                    <option value="casual">Casual Friend</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="customPrompt">Custom System Prompt (Optional):</label>
-                <textarea id="customPrompt" name="customPrompt" rows="4" placeholder="Enter a custom system prompt to override the personality..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="ttsProvider">Text-to-Speech Provider:</label>
-                <select id="ttsProvider" name="ttsProvider" required>
-                    <option value="default">Default (Twilio)</option>
-                    <option value="Google">Google TTS</option>
-                    <option value="amazon">Amazon Polly</option>
-                    <option value="ElevenLabs">ElevenLabs</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="voiceId">Voice Selection:</label>
-                <select id="voiceId" name="voiceId">
-                    <option value="">Default Voice</option>
-                </select>
-                <small id="voiceHelp">Select a TTS provider first to see available voices</small>
-            </div>
-
-            <div id="elevenLabsOptions" class="form-group elevenlabs-options" style="display: none;">
-                <h4>ElevenLabs Voice Customization</h4>
-                
-                <div class="voice-setting">
-                    <label for="elevenLabsModel">Model:</label>
-                    <select id="elevenLabsModel" name="elevenLabsModel">
-                        <option value="flash_v2_5">Flash 2.5 (Default)</option>
-                        <option value="flash_v2">Flash 2.0</option>
-                        <option value="turbo_v2_5">Turbo 2.5</option>
-                        <option value="turbo_v2">Turbo 2.0</option>
-                    </select>
-                </div>
-
-                <div class="voice-setting">
-                    <label for="speed">Speed (0.7 - 1.2):</label>
-                    <input type="range" id="speed" name="speed" min="0.7" max="1.2" step="0.1" value="1.0">
-                    <span id="speedValue">1.0</span>
-                </div>
-
-                <div class="voice-setting">
-                    <label for="stability">Stability (0.0 - 1.0):</label>
-                    <input type="range" id="stability" name="stability" min="0.0" max="1.0" step="0.1" value="0.5">
-                    <span id="stabilityValue">0.5</span>
-                </div>
-
-                <div class="voice-setting">
-                    <label for="similarity">Similarity (0.0 - 1.0):</label>
-                    <input type="range" id="similarity" name="similarity" min="0.0" max="1.0" step="0.1" value="0.5">
-                    <span id="similarityValue">0.5</span>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <svg class="signal" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle class="signal-core" cx="12" cy="12" r="3"/>
+                    <path class="signal-arc signal-arc-1" d="M7.5 7.5a6.36 6.36 0 0 0 0 9M16.5 7.5a6.36 6.36 0 0 1 0 9" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+                    <path class="signal-arc signal-arc-2" d="M4.5 4.5a10.6 10.6 0 0 0 0 15M19.5 4.5a10.6 10.6 0 0 1 0 15" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <div class="brand-text">
+                    <span class="brand-eyebrow">Twilio · BYOM</span>
+                    <span class="brand-name">Voice Assistant</span>
                 </div>
             </div>
-
-            <button type="submit">Save Configuration</button>
-        </form>
-
-        <div class="status-section">
-            <h2>Current Configuration</h2>
-            <div id="currentConfig">
-                <p><strong>Model:</strong> <span id="currentModel">Not set</span></p>
-                <p><strong>Personality:</strong> <span id="currentPersonality">Not set</span></p>
-                <p><strong>Status:</strong> <span id="status">Ready to configure</span></p>
+            <div class="status-pill" id="statusPill">
+                <span class="status-dot"></span>
+                <span id="status">Ready to configure</span>
             </div>
-        </div>
+        </header>
 
-        <div class="call-section">
-            <h2>Make a Call</h2>
-            <div class="call-grid">
-                <div class="call-form-col">
-                    <form id="callForm">
-                        <div class="form-group">
-                            <label for="userName">Your Name:</label>
-                            <input type="text" id="userName" name="userName" required placeholder="Enter your name">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="phoneNumber">Phone Number:</label>
-                            <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="+1234567890">
-                            <small>Include country code (e.g., +1 for US)</small>
-                        </div>
-
-                        <button type="submit" id="callButton">Call Me Now</button>
-                    </form>
-                    <div id="callStatus" class="call-status"></div>
-                </div>
-
-                <div class="qr-card" id="qrCard" aria-live="polite">
-                    <div class="qr-inner">
-                        <img id="qrImage" alt="Scan to call the AI assistant" width="240" height="240" style="display:none"/>
-                        <div id="qrFallback" class="qr-fallback">QR code will appear here once your Twilio number is configured.</div>
-                        <div class="qr-caption">
-                            <span>Or scan to call</span>
-                            <a id="telLink" class="tel-link" href="#" rel="nofollow noopener" aria-label="Call the AI assistant"></a>
-                        </div>
+        <main class="stack">
+            <section class="hero">
+                <h1>Configure your<br>voice assistant.</h1>
+                <p class="hero-sub">Pick a model and personality, tune the voice, then place a test call. Or scan the QR code to dial in from your phone.</p>
+                <div class="hero-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Model</span>
+                        <span class="meta-value" id="currentModel">Not set</span>
+                    </div>
+                    <div class="meta-divider"></div>
+                    <div class="meta-item">
+                        <span class="meta-label">Personality</span>
+                        <span class="meta-value" id="currentPersonality">Not set</span>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <div class="instructions">
-            <h2>Instructions</h2>
-            <ol>
-                <li>Configure your AI assistant using the settings above</li>
-                <li>Enter your name and phone number in the call section</li>
-                <li>Click "Call Me Now" to receive a call from the AI assistant</li>
-                <li>Alternatively, call your Twilio number directly to interact with the assistant</li>
-            </ol>
-        </div>
+            <section class="panel">
+                <div class="panel-head">
+                    <span class="panel-label">01 · Configuration</span>
+                    <span class="panel-hint">Saved to server</span>
+                </div>
+                <form id="configForm" class="panel-body">
+                    <div class="grid grid-2">
+                        <div class="field">
+                            <label for="aiModel">AI Model</label>
+                            <select id="aiModel" name="aiModel" required>
+                                <option value="openai-gpt4o-mini">OpenAI GPT-4o Mini</option>
+                                <option value="openai-gpt4o">OpenAI GPT-4o</option>
+                                <option value="openai-gpt4">OpenAI GPT-4</option>
+                                <option value="gemini-pro">Google Gemini Pro</option>
+                                <option value="gemini-flash">Google Gemini Flash</option>
+                                <option value="bedrock-nova-micro">AWS Nova Micro</option>
+                                <option value="bedrock-nova-lite">AWS Nova Lite</option>
+                                <option value="bedrock-nova-pro">AWS Nova Pro</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="personality">Personality</label>
+                            <select id="personality" name="personality" required>
+                                <option value="helpful">Helpful Assistant</option>
+                                <option value="friendly">Friendly Companion</option>
+                                <option value="professional">Professional Advisor</option>
+                                <option value="creative">Creative Thinker</option>
+                                <option value="witty">Witty Conversationalist</option>
+                                <option value="empathetic">Empathetic Listener</option>
+                                <option value="technical">Technical Expert</option>
+                                <option value="casual">Casual Friend</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="customPrompt">Custom system prompt <span class="field-optional">optional</span></label>
+                        <textarea id="customPrompt" name="customPrompt" rows="4" placeholder="Override the personality with your own instructions…"></textarea>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="field">
+                            <label for="ttsProvider">Text-to-speech</label>
+                            <select id="ttsProvider" name="ttsProvider" required>
+                                <option value="default">Default (Twilio)</option>
+                                <option value="Google">Google TTS</option>
+                                <option value="amazon">Amazon Polly</option>
+                                <option value="ElevenLabs">ElevenLabs</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="voiceId">Voice</label>
+                            <select id="voiceId" name="voiceId">
+                                <option value="">Default Voice</option>
+                            </select>
+                            <small id="voiceHelp" class="field-help">Select a TTS provider to see available voices.</small>
+                        </div>
+                    </div>
+
+                    <div id="elevenLabsOptions" class="advanced" hidden>
+                        <div class="advanced-head">
+                            <span class="advanced-label">ElevenLabs · Advanced</span>
+                        </div>
+                        <div class="advanced-body">
+                            <div class="field">
+                                <label for="elevenLabsModel">Model</label>
+                                <select id="elevenLabsModel" name="elevenLabsModel">
+                                    <option value="flash_v2_5">Flash 2.5 (Default)</option>
+                                    <option value="flash_v2">Flash 2.0</option>
+                                    <option value="turbo_v2_5">Turbo 2.5</option>
+                                    <option value="turbo_v2">Turbo 2.0</option>
+                                </select>
+                            </div>
+
+                            <div class="slider-row">
+                                <label for="speed">Speed</label>
+                                <input type="range" id="speed" name="speed" min="0.7" max="1.2" step="0.1" value="1.0">
+                                <span class="slider-value" id="speedValue">1.0</span>
+                            </div>
+
+                            <div class="slider-row">
+                                <label for="stability">Stability</label>
+                                <input type="range" id="stability" name="stability" min="0.0" max="1.0" step="0.1" value="0.5">
+                                <span class="slider-value" id="stabilityValue">0.5</span>
+                            </div>
+
+                            <div class="slider-row">
+                                <label for="similarity">Similarity</label>
+                                <input type="range" id="similarity" name="similarity" min="0.0" max="1.0" step="0.1" value="0.5">
+                                <span class="slider-value" id="similarityValue">0.5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-actions">
+                        <button type="submit" class="btn btn-primary">Save configuration</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <span class="panel-label">02 · Place a call</span>
+                    <span class="panel-hint">Outbound or scan-to-dial</span>
+                </div>
+                <div class="panel-body call-grid">
+                    <div class="call-form-col">
+                        <form id="callForm">
+                            <div class="field">
+                                <label for="userName">Your name</label>
+                                <input type="text" id="userName" name="userName" required placeholder="Jane Smith">
+                            </div>
+
+                            <div class="field">
+                                <label for="phoneNumber">Phone number</label>
+                                <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="+1 555 123 4567">
+                                <small class="field-help">Include country code (e.g. +1 for US).</small>
+                            </div>
+
+                            <button type="submit" id="callButton" class="btn btn-primary">Call me now</button>
+                        </form>
+                        <div id="callStatus" class="call-status"></div>
+                    </div>
+
+                    <aside class="qr-card" id="qrCard" aria-live="polite">
+                        <span class="qr-label">Scan to call</span>
+                        <div class="qr-frame">
+                            <img id="qrImage" alt="Scan to call the AI assistant" width="200" height="200" hidden/>
+                            <div id="qrFallback" class="qr-fallback">Configure your Twilio number to enable dial-in.</div>
+                        </div>
+                        <a id="telLink" class="tel-link" href="#" rel="nofollow noopener" aria-label="Call the AI assistant"></a>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="panel panel-quiet">
+                <div class="panel-head">
+                    <span class="panel-label">Get started</span>
+                </div>
+                <ol class="steps">
+                    <li><span class="step-num">1</span><span>Configure your AI assistant using the settings above.</span></li>
+                    <li><span class="step-num">2</span><span>Enter your name and phone number in the call section.</span></li>
+                    <li><span class="step-num">3</span><span>Click <em>Call me now</em> to receive a call from the assistant.</span></li>
+                    <li><span class="step-num">4</span><span>Or call your Twilio number directly (scan the QR code above).</span></li>
+                </ol>
+            </section>
+        </main>
+
+        <footer class="foot">
+            <span>Powered by Twilio · Bring your own model</span>
+        </footer>
     </div>
 
     <script src="/static/script.js"></script>

@@ -24,7 +24,7 @@ From the repository root, run:
 ./deploy.sh
 ```
 
-The script prompts for resource group, app name, and location, then provisions Azure resources, builds the container image, configures secrets and env vars, and prints the public app URL.
+The script prompts for resource group, app name, location, and the required `created_by` resource tag. It applies the tag to new and existing resources, builds the container image, configures secrets and env vars, and prints the public app URL.
 
 If you prefer a fully manual walkthrough, follow the steps below.
 
@@ -103,9 +103,9 @@ az containerapp secret set \
   -n "$APP_NAME" \
   --secrets \
     openai="$OPENAI_API_KEY" \
-    twilioSid="$TWILIO_ACCOUNT_SID" \
-    twilioToken="$TWILIO_AUTH_TOKEN" \
-    twilioPhone="$TWILIO_PHONE_NUMBER" \
+    twilio-sid="$TWILIO_ACCOUNT_SID" \
+    twilio-token="$TWILIO_AUTH_TOKEN" \
+    twilio-phone="$TWILIO_PHONE_NUMBER" \
     gemini="$GEMINI_API_KEY"
 
 az containerapp update \
@@ -115,9 +115,9 @@ az containerapp update \
     PORT=8080 \
     NGROK_URL="$FQDN" \
     OPENAI_API_KEY=secretref:openai \
-    TWILIO_ACCOUNT_SID=secretref:twilioSid \
-    TWILIO_AUTH_TOKEN=secretref:twilioToken \
-    TWILIO_PHONE_NUMBER=secretref:twilioPhone
+    TWILIO_ACCOUNT_SID=secretref:twilio-sid \
+    TWILIO_AUTH_TOKEN=secretref:twilio-token \
+    TWILIO_PHONE_NUMBER=secretref:twilio-phone
 
 # Only if you plan to use Gemini models
 az containerapp update \
